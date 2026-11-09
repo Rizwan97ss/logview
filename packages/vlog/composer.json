@@ -1,0 +1,48 @@
+{
+    "name": "rss/vlog",
+    "description": "Log viewer for Laravel, CodeIgniter and PHP applications.",
+    "keywords": [
+        "log-viewer",
+        "logs",
+        "laravel",
+        "codeigniter",
+        "monolog",
+        "debugging"
+    ],
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "rizwan25"
+        }
+    ],
+    "require": {
+        "php": "^7.4 || ^8.0"
+    },
+    "require-dev": {
+        "pestphp/pest": "^1.23 || ^2.36 || ^3.8 || ^4.0 || ^5.0",
+        "phpstan/phpstan": "^2.1"
+    },
+    "autoload": {
+        "psr-4": {
+            "Rss\\Vlog\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Rss\\Vlog\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": "pest",
+        "analyse": "phpstan analyse --memory-limit=1G"
+    },
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}
