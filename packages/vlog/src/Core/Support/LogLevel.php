@@ -81,6 +81,18 @@ final class LogLevel
     }
 
     /**
+     * Get the level for a Monolog severity number, such as 400 for "error".
+     *
+     * Returns null when the number isn't an exact Monolog severity.
+     */
+    public static function fromSeverity(int $severity): ?string
+    {
+        $level = array_search($severity, self::SEVERITIES, true);
+
+        return $level === false ? null : $level;
+    }
+
+    /**
      * Determine whether a level is at least as severe as a minimum level.
      *
      * Unrecognized levels never meet the minimum.

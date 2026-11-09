@@ -41,6 +41,15 @@ it('returns null for values that are not levels', function (string $raw) {
     'CodeIgniter 3 threshold' => ['ALL'],
 ]);
 
+it('converts Monolog severity numbers to levels', function (int $severity, ?string $expected) {
+    expect(LogLevel::fromSeverity($severity))->toBe($expected);
+})->with([
+    'debug' => [100, 'debug'],
+    'error' => [400, 'error'],
+    'emergency' => [600, 'emergency'],
+    'not a Monolog severity' => [450, null],
+]);
+
 it('treats a level as meeting a minimum when it is equally or more severe', function (string $level, string $minimum, bool $expected) {
     expect(LogLevel::isAtLeast($level, $minimum))->toBe($expected);
 })->with([

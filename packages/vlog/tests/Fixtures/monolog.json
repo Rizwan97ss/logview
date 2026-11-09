@@ -1,0 +1,2 @@
+{"message":"Payment captured","context":{"order_id":991},"level":200,"level_name":"INFO","channel":"payments","datetime":"2026-11-09T11:00:00.123456+00:00","extra":{}}
+{"message":"Gateway timeout","context":{"exception":{"class":"RuntimeException","message":"Gateway timeout","code":0,"file":"/var/www/app/Gateway.php:88","trace":["/var/www/app/Checkout.php:41","/var/www/public/index.php:17"]}},"level":500,"level_name":"CRITICAL","channel":"payments","datetime":"2026-11-09T11:00:05.000000+00:00","extra":{}}

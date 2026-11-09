@@ -1,0 +1,8 @@
+[2026-11-09 10:15:30] local.INFO: User logged in {"user_id":7}
+[2026-11-09 10:15:32] local.ERROR: Division by zero {"user_id":7,"exception":"[object] (DivisionByZeroError(code: 0): Division by zero at /var/www/app/Http/Controllers/ReportController.php:21)
+[stacktrace]
+#0 /var/www/vendor/laravel/framework/src/Illuminate/Routing/Controller.php(54): App\\Http\\Controllers\\ReportController->show()
+#1 [internal function]: Illuminate\\Routing\\Controller->callAction()
+#2 {main}
+"}
+[2026-11-09 10:16:00] production.WARNING: Cache miss for key users:7
