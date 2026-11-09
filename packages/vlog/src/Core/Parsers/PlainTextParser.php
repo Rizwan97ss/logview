@@ -2,6 +2,7 @@
 
 namespace Rss\Vlog\Core\Parsers;
 
+use Rss\Vlog\Core\Entry\EntryHeader;
 use Rss\Vlog\Core\Entry\LogEntry;
 
 /**
@@ -18,6 +19,11 @@ final class PlainTextParser implements Parser
     public function startsEntry(string $line): bool
     {
         return ! $this->isNoise($line);
+    }
+
+    public function headerOf(string $line): ?EntryHeader
+    {
+        return $this->isNoise($line) ? null : new EntryHeader;
     }
 
     public function isNoise(string $line): bool

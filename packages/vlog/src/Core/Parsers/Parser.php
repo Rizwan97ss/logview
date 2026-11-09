@@ -2,6 +2,7 @@
 
 namespace Rss\Vlog\Core\Parsers;
 
+use Rss\Vlog\Core\Entry\EntryHeader;
 use Rss\Vlog\Core\Entry\LogEntry;
 
 /**
@@ -21,6 +22,12 @@ interface Parser
      * Determine whether a line starts a new entry.
      */
     public function startsEntry(string $line): bool;
+
+    /**
+     * Read the level and time from a line that starts an entry, or return
+     * null when the line doesn't start one.
+     */
+    public function headerOf(string $line): ?EntryHeader;
 
     /**
      * Determine whether a line outside an entry should be skipped, such as a

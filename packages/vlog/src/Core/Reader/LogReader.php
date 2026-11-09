@@ -20,6 +20,11 @@ final class LogReader
      */
     private const CHUNK_BYTES = 8192;
 
+    /**
+     * The most bytes read at once when reading several entries.
+     */
+    private const MAX_SPAN_BYTES = 8388608;
+
     private Parser $parser;
 
     private int $maxEntryBytes;
@@ -87,6 +92,92 @@ final class LogReader
         } finally {
             fclose($handle);
         }
+    }
+
+    /**
+     * Read the entries at known positions, such as positions from an index.
+     *
+     * @param  list<array{offset: int, length: int}>  $positions  Each entry's byte offset and size in bytes.
+     * @return list<LogEntry>
+     *
+     * @throws LogFileException
+     */
+    public function entriesAt(string $path, array $positions): array
+    {
+        $entries = [];
+
+        foreach ($this->textsAt($path, $positions) as $index => $text) {
+            $position = $positions[$index];
+
+            $entries[] = $this->parser
+                ->parse($text)
+                ->withPosition($position['offset'], $position['length'], $position['length'] > $this->maxEntryBytes);
+        }
+
+        return $entries;
+    }
+
+    /**
+     * Read the raw text of the entries at known positions, without parsing
+     * them. Each text is capped at the maximum entry size.
+     *
+     * Entries close together are read with a single read from the file.
+     *
+     * @param  list<array{offset: int, length: int}>  $positions  Each entry's byte offset and size in bytes.
+     * @return list<string>
+     *
+     * @throws LogFileException
+     */
+    public function textsAt(string $path, array $positions): array
+    {
+        if ($positions === []) {
+            return [];
+        }
+
+        $start = PHP_INT_MAX;
+        $end = 0;
+
+        foreach ($positions as $position) {
+            $start = min($start, $position['offset']);
+            $end = max($end, $position['offset'] + $position['length']);
+        }
+
+        $handle = LogFile::open($path);
+        $texts = [];
+
+        try {
+            if ($end - $start <= self::MAX_SPAN_BYTES) {
+                $span = $this->readBytes($handle, $start, $end - $start);
+
+                foreach ($positions as $position) {
+                    $text = (string) substr($span, $position['offset'] - $start, min($position['length'], $this->maxEntryBytes));
+                    $texts[] = str_replace("\r\n", "\n", $text);
+                }
+            } else {
+                foreach ($positions as $position) {
+                    $text = $this->readBytes($handle, $position['offset'], min($position['length'], $this->maxEntryBytes));
+                    $texts[] = str_replace("\r\n", "\n", $text);
+                }
+            }
+        } finally {
+            fclose($handle);
+        }
+
+        return $texts;
+    }
+
+    /**
+     * @param  resource  $handle
+     */
+    private function readBytes($handle, int $offset, int $length): string
+    {
+        if ($length < 1) {
+            return '';
+        }
+
+        fseek($handle, $offset);
+
+        return (string) stream_get_contents($handle, $length);
     }
 
     /**

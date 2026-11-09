@@ -9,23 +9,55 @@ function vlogFixture(string $name): string
 }
 
 /**
+ * Create a temporary directory that's deleted when the tests end.
+ */
+function vlogTemporaryDirectory(): string
+{
+    static $root = null;
+
+    if ($root === null) {
+        $root = sys_get_temp_dir().DIRECTORY_SEPARATOR.'vlog-tests-'.getmypid();
+        $directory = $root;
+
+        register_shutdown_function(function () use ($directory): void {
+            vlogDeleteDirectory($directory);
+        });
+    }
+
+    $path = $root.DIRECTORY_SEPARATOR.uniqid('', true);
+    mkdir($path, 0775, true);
+
+    return $path;
+}
+
+/**
  * Write contents to a temporary log file that's deleted when the tests end.
  */
 function vlogTemporaryLog(string $contents): string
 {
-    static $paths = [];
-
-    if ($paths === []) {
-        register_shutdown_function(function () use (&$paths): void {
-            foreach ($paths as $path) {
-                @unlink($path);
-            }
-        });
-    }
-
-    $path = (string) tempnam(sys_get_temp_dir(), 'vlog');
+    $path = vlogTemporaryDirectory().DIRECTORY_SEPARATOR.'test.log';
     file_put_contents($path, $contents);
-    $paths[] = $path;
 
     return $path;
+}
+
+/**
+ * Delete a directory and everything in it.
+ */
+function vlogDeleteDirectory(string $directory): void
+{
+    if (! is_dir($directory)) {
+        return;
+    }
+
+    $items = new RecursiveIteratorIterator(
+        new RecursiveDirectoryIterator($directory, FilesystemIterator::SKIP_DOTS),
+        RecursiveIteratorIterator::CHILD_FIRST
+    );
+
+    foreach ($items as $item) {
+        $item->isDir() ? @rmdir($item->getPathname()) : @unlink($item->getPathname());
+    }
+
+    @rmdir($directory);
 }

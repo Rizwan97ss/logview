@@ -100,3 +100,14 @@ it('returns text without a header as a message with no level', function () {
     expect($entry->level())->toBeNull();
     expect($entry->time())->toBeNull();
 });
+
+it('reads the level and time from a header line without parsing the entry', function () {
+    $header = (new LaravelParser)->headerOf('[2026-11-09T10:15:32+00:00] local.ERROR: Failed {"id":1}');
+
+    expect($header->level())->toBe('error');
+    expect($header->timestamp())->toBe(1794219332);
+});
+
+it('reads no header from a line that does not start an entry', function () {
+    expect((new LaravelParser)->headerOf('#0 /var/www/app/Job.php(5): run()'))->toBeNull();
+});

@@ -2,6 +2,7 @@
 
 namespace Rss\Vlog\Core\Parsers;
 
+use Rss\Vlog\Core\Entry\EntryHeader;
 use Rss\Vlog\Core\Entry\LogEntry;
 use Rss\Vlog\Core\Support\Json;
 use Rss\Vlog\Core\Support\Time;
@@ -27,6 +28,15 @@ final class LaravelParser implements Parser
     public function startsEntry(string $line): bool
     {
         return isset($line[0]) && $line[0] === '[' && preg_match(self::HEADER, $line) === 1;
+    }
+
+    public function headerOf(string $line): ?EntryHeader
+    {
+        if (! isset($line[0]) || $line[0] !== '[' || preg_match(self::HEADER, $line, $matches) !== 1) {
+            return null;
+        }
+
+        return EntryHeader::fromText($matches[3], $matches[1]);
     }
 
     public function isNoise(string $line): bool

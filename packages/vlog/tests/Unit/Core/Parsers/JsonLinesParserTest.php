@@ -46,3 +46,14 @@ it('returns text that is not a JSON log record as a message with no level', func
     expect($entry->message())->toBe('not json');
     expect($entry->level())->toBeNull();
 });
+
+it('reads the level and time from a record without parsing the entry', function () {
+    $header = (new JsonLinesParser)->headerOf('{"message":"Failed","level":400,"datetime":"2026-11-09T10:15:32+00:00"}');
+
+    expect($header->level())->toBe('error');
+    expect($header->timestamp())->toBe(1794219332);
+});
+
+it('reads no header from a line that is not a log record', function () {
+    expect((new JsonLinesParser)->headerOf('{"event":"started"}'))->toBeNull();
+});

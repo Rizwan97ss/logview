@@ -50,3 +50,14 @@ LOG;
     expect([$frames[1]->index(), $frames[1]->file(), $frames[1]->line(), $frames[1]->call()])
         ->toBe([2, 'SYSTEMPATH/CodeIgniter.php', 933, 'App\Controllers\Reports->index()']);
 });
+
+it('reads the level and time from a header line without parsing the entry', function () {
+    $header = (new CodeIgniterParser)->headerOf('CRITICAL - 2026-11-09 09:00:02 --> Failed');
+
+    expect($header->level())->toBe('critical');
+    expect($header->timestamp())->not->toBeNull();
+});
+
+it('reads no header from a line that does not start an entry', function () {
+    expect((new CodeIgniterParser)->headerOf(' 1 APPPATH/Controllers/Reports.php(18): index()'))->toBeNull();
+});

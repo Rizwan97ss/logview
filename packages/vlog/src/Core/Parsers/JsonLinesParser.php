@@ -2,6 +2,7 @@
 
 namespace Rss\Vlog\Core\Parsers;
 
+use Rss\Vlog\Core\Entry\EntryHeader;
 use Rss\Vlog\Core\Entry\LogEntry;
 use Rss\Vlog\Core\Entry\StackFrame;
 use Rss\Vlog\Core\Support\Json;
@@ -21,15 +22,18 @@ final class JsonLinesParser implements Parser
 
     public function startsEntry(string $line): bool
     {
-        $line = ltrim($line);
+        return $this->record($line) !== null;
+    }
 
-        if (! isset($line[0]) || $line[0] !== '{') {
-            return false;
+    public function headerOf(string $line): ?EntryHeader
+    {
+        $record = $this->record($line);
+
+        if ($record === null) {
+            return null;
         }
 
-        $record = Json::decodeArray($line);
-
-        return $record !== null && array_key_exists('message', $record);
+        return EntryHeader::fromText($this->level($record), $this->stringValue($record['datetime'] ?? null));
     }
 
     public function isNoise(string $line): bool
@@ -41,9 +45,9 @@ final class JsonLinesParser implements Parser
     {
         $text = rtrim($text);
         $lines = explode("\n", $text, 2);
-        $record = Json::decodeArray($lines[0]);
+        $record = $this->record($lines[0]);
 
-        if ($record === null || ! array_key_exists('message', $record)) {
+        if ($record === null) {
             return new LogEntry($this->name(), $text, $text);
         }
 
@@ -59,6 +63,25 @@ final class JsonLinesParser implements Parser
             $context,
             $this->stackFrames($context)
         );
+    }
+
+    /**
+     * Decode a line as a log record, or return null when it isn't a JSON
+     * object with a message.
+     *
+     * @return array<array-key, mixed>|null
+     */
+    private function record(string $line): ?array
+    {
+        $line = ltrim($line);
+
+        if (! isset($line[0]) || $line[0] !== '{') {
+            return null;
+        }
+
+        $record = Json::decodeArray($line);
+
+        return $record !== null && array_key_exists('message', $record) ? $record : null;
     }
 
     /**

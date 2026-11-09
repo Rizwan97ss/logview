@@ -110,3 +110,33 @@ it('reads nothing from an empty file', function () {
 it('throws when the file cannot be read', function () {
     iterator_to_array((new LogReader(new LaravelParser))->entries(vlogFixture('missing.log')));
 })->throws(LogFileException::class);
+
+it('reads entries at known positions and truncates ones over the size limit', function () {
+    $first = "[2026-11-09 10:00:00] local.ERROR: First\n#0 {main}\n";
+    $second = '[2026-11-09 10:00:01] local.INFO: '.str_repeat('x', 100)."\n";
+    $path = vlogTemporaryLog($first.$second);
+
+    $entries = (new LogReader(new LaravelParser, 60))->entriesAt($path, [
+        ['offset' => strlen($first), 'length' => strlen($second)],
+        ['offset' => 0, 'length' => strlen($first)],
+    ]);
+
+    expect($entries[0]->isTruncated())->toBeTrue();
+    expect($entries[0]->offset())->toBe(strlen($first));
+    expect($entries[1]->message())->toBe("First\n#0 {main}");
+    expect($entries[1]->isTruncated())->toBeFalse();
+});
+
+it('reads the raw text of entries far apart in the file', function () {
+    $first = "[2026-11-09 10:00:00] local.INFO: First\r\n";
+    $padding = str_repeat("[2026-11-09 10:00:01] local.DEBUG: padding\n", 220000);
+    $last = "[2026-11-09 10:00:02] local.INFO: Last\n";
+    $path = vlogTemporaryLog($first.$padding.$last);
+
+    $texts = (new LogReader(new LaravelParser))->textsAt($path, [
+        ['offset' => strlen($first) + strlen($padding), 'length' => strlen($last)],
+        ['offset' => 0, 'length' => strlen($first)],
+    ]);
+
+    expect($texts)->toBe(["[2026-11-09 10:00:02] local.INFO: Last\n", "[2026-11-09 10:00:00] local.INFO: First\n"]);
+});

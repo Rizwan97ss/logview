@@ -27,6 +27,11 @@ final class LogLevel
     public const DEBUG = 'debug';
 
     /**
+     * The name used for entries whose level isn't recognized.
+     */
+    public const UNKNOWN = 'unknown';
+
+    /**
      * Each level's severity, where a higher number is more severe.
      *
      * @var array<string, int>

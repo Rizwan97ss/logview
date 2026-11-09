@@ -2,6 +2,7 @@
 
 namespace Rss\Vlog\Core\Parsers;
 
+use Rss\Vlog\Core\Entry\EntryHeader;
 use Rss\Vlog\Core\Entry\LogEntry;
 use Rss\Vlog\Core\Support\Time;
 
@@ -21,6 +22,15 @@ final class CodeIgniterParser implements Parser
     public function startsEntry(string $line): bool
     {
         return preg_match(self::HEADER, $line) === 1;
+    }
+
+    public function headerOf(string $line): ?EntryHeader
+    {
+        if (preg_match(self::HEADER, $line, $matches) !== 1) {
+            return null;
+        }
+
+        return EntryHeader::fromText($matches[1], $matches[2]);
     }
 
     /**
