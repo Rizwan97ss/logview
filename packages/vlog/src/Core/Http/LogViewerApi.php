@@ -7,6 +7,7 @@ use Rss\Vlog\Core\Exceptions\IndexException;
 use Rss\Vlog\Core\Exceptions\LogFileException;
 use Rss\Vlog\Core\Files\LogFile;
 use Rss\Vlog\Core\Files\LogFileFinder;
+use Rss\Vlog\Core\Index\IndexPruner;
 use Rss\Vlog\Core\Index\LogIndex;
 use Rss\Vlog\Core\Search\SearchFilter;
 use Rss\Vlog\Core\Security\Redactor;
@@ -52,11 +53,18 @@ final class LogViewerApi
     }
 
     /**
-     * List the log files.
+     * List the log files, and occasionally delete the indexes of log files
+     * that no longer exist.
      */
     public function files(): ApiResponse
     {
-        return ApiResponse::ok(['data' => array_map([$this->presenter, 'file'], $this->finder->all())]);
+        $files = $this->finder->all();
+
+        (new IndexPruner($this->indexDirectory))->prune(array_map(function (LogFile $file): string {
+            return $file->path();
+        }, $files));
+
+        return ApiResponse::ok(['data' => array_map([$this->presenter, 'file'], $files)]);
     }
 
     /**

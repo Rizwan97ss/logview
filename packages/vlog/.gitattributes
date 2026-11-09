@@ -13,3 +13,4 @@
 /vite.config.ts export-ignore
 /phpstan.adapters.neon export-ignore
 /tsconfig.json export-ignore
+/art export-ignore

@@ -47,8 +47,17 @@ final class IndexStorage
     public function __construct(string $directory, string $logPath)
     {
         $this->directory = rtrim($directory, '/\\');
+        $this->basePath = $this->directory.DIRECTORY_SEPARATOR.self::keyFor($logPath);
+    }
+
+    /**
+     * Get the name an index's files start with for a log file.
+     */
+    public static function keyFor(string $logPath): string
+    {
         $realPath = realpath($logPath);
-        $this->basePath = $this->directory.DIRECTORY_SEPARATOR.sha1($realPath === false ? $logPath : $realPath);
+
+        return sha1($realPath === false ? $logPath : $realPath);
     }
 
     /**
