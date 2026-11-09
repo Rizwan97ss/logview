@@ -1,7 +1,9 @@
+# The core is checked against every supported PHP version. Framework
+# adapters are checked separately with phpstan.adapters.neon.
 parameters:
     level: max
     paths:
-        - src
+        - src/Core
     phpVersion:
         min: 70400
         max: 80599

@@ -1,0 +1,6 @@
+# Framework adapters are checked against the installed framework's own PHP
+# version, so they don't use the core's PHP 7.4 version range.
+parameters:
+    level: max
+    paths:
+        - src/Adapters

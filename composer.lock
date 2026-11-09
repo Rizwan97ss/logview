@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "9bf224739eeeb99ffea425f52d58af83",
+    "content-hash": "89788407a12ee50f21d0cec84dbf3fc9",
     "packages": [
         {
             "name": "bacon/bacon-qr-code",
@@ -4107,6 +4107,74 @@
                 "source": "https://github.com/ramsey/uuid/tree/4.9.4"
             },
             "time": "2026-09-16T11:39:30+00:00"
+        },
+        {
+            "name": "rss/vlog",
+            "version": "dev-main",
+            "dist": {
+                "type": "path",
+                "url": "packages/vlog",
+                "reference": "a797c47001f1cffd2a37904208bda8158a80553d"
+            },
+            "require": {
+                "php": "^7.4 || ^8.0"
+            },
+            "require-dev": {
+                "orchestra/testbench": "^6.0 || ^7.0 || ^8.0 || ^9.0 || ^10.0 || ^11.0",
+                "pestphp/pest": "^1.23 || ^2.36 || ^3.8 || ^4.0 || ^5.0",
+                "phpstan/phpstan": "^2.1"
+            },
+            "suggest": {
+                "laravel/framework": "Vlog registers itself automatically in Laravel 8 and later."
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Rss\\Vlog\\Adapters\\Laravel\\VlogServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Rss\\Vlog\\": "src/"
+                }
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "Rss\\Vlog\\Tests\\": "tests/"
+                }
+            },
+            "scripts": {
+                "test": [
+                    "pest"
+                ],
+                "analyse": [
+                    "phpstan analyse --memory-limit=1G",
+                    "phpstan analyse -c phpstan.adapters.neon --memory-limit=1G"
+                ]
+            },
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "rizwan25"
+                }
+            ],
+            "description": "Log viewer for Laravel, CodeIgniter and PHP applications.",
+            "keywords": [
+                "codeigniter",
+                "debugging",
+                "laravel",
+                "log-viewer",
+                "logs",
+                "monolog"
+            ],
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
         },
         {
             "name": "spomky-labs/cbor-php",
@@ -11648,7 +11716,9 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {},
+    "stability-flags": {
+        "rss/vlog": 20
+    },
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {

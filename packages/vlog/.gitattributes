@@ -11,3 +11,4 @@
 /package.json export-ignore
 /package-lock.json export-ignore
 /vite.config.ts export-ignore
+/phpstan.adapters.neon export-ignore

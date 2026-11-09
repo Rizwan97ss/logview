@@ -1,5 +1,14 @@
 <?php
 
+use Orchestra\Testbench\TestCase;
+use Rss\Vlog\Tests\Feature\Laravel\TestCase as LaravelTestCase;
+
+// Laravel's test tools need PHP 8.2 or later, so on older PHP versions only
+// the core's unit tests run.
+if (class_exists(TestCase::class)) {
+    uses(LaravelTestCase::class)->in('Feature/Laravel');
+}
+
 /**
  * Get the path of a file in the tests/Fixtures directory.
  */

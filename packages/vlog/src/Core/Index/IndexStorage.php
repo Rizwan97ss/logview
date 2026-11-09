@@ -246,5 +246,12 @@ final class IndexStorage
         if (! is_writable($this->directory)) {
             throw IndexException::directoryNotWritable($this->directory);
         }
+
+        // Keep index files out of the application's version control.
+        $gitignore = $this->directory.DIRECTORY_SEPARATOR.'.gitignore';
+
+        if (! is_file($gitignore)) {
+            @file_put_contents($gitignore, "*\n");
+        }
     }
 }

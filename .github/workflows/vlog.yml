@@ -25,19 +25,26 @@ defaults:
 
 jobs:
   tests:
-    name: PHP ${{ matrix.php }} on ${{ matrix.os }}
+    name: PHP ${{ matrix.php }} on ${{ matrix.os }} (${{ matrix.suite }})
     runs-on: ${{ matrix.os }}
 
+    # "core" runs the framework-independent tests only. "laravel" also runs the
+    # Laravel adapter tests against the newest Laravel that installs on that PHP
+    # version. Composer blocks Laravel versions with known security advisories,
+    # so the Laravel tests start at PHP 8.2.
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest]
-        php: ['7.4', '8.0', '8.1', '8.2', '8.3', '8.4', '8.5']
         include:
-          - os: windows-latest
-            php: '7.4'
-          - os: windows-latest
-            php: '8.5'
+          - { os: ubuntu-latest, php: '7.4', suite: core }
+          - { os: ubuntu-latest, php: '8.0', suite: core }
+          - { os: ubuntu-latest, php: '8.1', suite: core }
+          - { os: ubuntu-latest, php: '8.2', suite: laravel }
+          - { os: ubuntu-latest, php: '8.3', suite: laravel }
+          - { os: ubuntu-latest, php: '8.4', suite: laravel }
+          - { os: ubuntu-latest, php: '8.5', suite: laravel }
+          - { os: windows-latest, php: '7.4', suite: core }
+          - { os: windows-latest, php: '8.5', suite: laravel }
 
     steps:
       - name: Checkout code
@@ -52,13 +59,22 @@ jobs:
           tools: composer:v2
           coverage: none
 
+      - name: Remove Laravel test tools
+        if: matrix.suite == 'core'
+        run: composer remove --dev orchestra/testbench --no-update --no-interaction
+
       - name: Install dependencies
         run: composer update --prefer-dist --no-interaction --no-progress
 
       - name: Check syntax
         run: find src tests -name '*.php' -print0 | xargs -0 -n1 php -l
 
-      - name: Run tests
+      - name: Run core tests
+        if: matrix.suite == 'core'
+        run: vendor/bin/pest --testsuite=Unit
+
+      - name: Run all tests
+        if: matrix.suite == 'laravel'
         run: vendor/bin/pest
 
   quality:
@@ -81,8 +97,11 @@ jobs:
       - name: Install dependencies
         run: composer update --prefer-dist --no-interaction --no-progress
 
-      - name: Run PHPStan
+      - name: Run PHPStan on the core
         run: vendor/bin/phpstan analyse --memory-limit=1G --no-progress
+
+      - name: Run PHPStan on the framework adapters
+        run: vendor/bin/phpstan analyse -c phpstan.adapters.neon --memory-limit=1G --no-progress
 
       - name: Check code style
         run: |

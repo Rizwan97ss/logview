@@ -1,0 +1,20 @@
+{
+    "name": "vlog-ui",
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "dev": "vite build --watch",
+        "build": "vite build",
+        "typecheck": "tsc --noEmit",
+        "test": "vitest run"
+    },
+    "devDependencies": {
+        "@preact/preset-vite": "^2.10.6",
+        "@tailwindcss/vite": "^4.3.5",
+        "preact": "^11.2.0",
+        "tailwindcss": "^4.3.5",
+        "typescript": "^7.0.2",
+        "vite": "^8.3.7",
+        "vitest": "^5.1.0"
+    }
+}
