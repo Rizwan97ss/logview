@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Vite;
 
 it('serves the viewer page with the API URL', function () {
     Gate::define('viewVlog', function ($user = null): bool {
@@ -18,4 +19,16 @@ it('serves the viewer page with the API URL', function () {
 
 it('forbids the viewer page when the gate denies access', function () {
     $this->get('/vlog')->assertForbidden();
+});
+
+it('uses the Content Security Policy nonce the application gave Vite', function () {
+    Gate::define('viewVlog', function ($user = null): bool {
+        return true;
+    });
+    Vite::useCspNonce('test-nonce');
+
+    $this->get('/vlog')
+        ->assertOk()
+        ->assertSee('<script type="module" nonce="test-nonce">', false)
+        ->assertSee('<style nonce="test-nonce">', false);
 });

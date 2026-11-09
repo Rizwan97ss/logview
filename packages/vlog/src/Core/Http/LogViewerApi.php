@@ -9,6 +9,7 @@ use Rss\Vlog\Core\Files\LogFile;
 use Rss\Vlog\Core\Files\LogFileFinder;
 use Rss\Vlog\Core\Index\LogIndex;
 use Rss\Vlog\Core\Search\SearchFilter;
+use Rss\Vlog\Core\Security\Redactor;
 
 /**
  * The log viewer's JSON API, independent of any framework.
@@ -29,16 +30,25 @@ final class LogViewerApi
 
     private int $maxEntryBytes;
 
+    private Presenter $presenter;
+
     /**
      * @param  float  $timeLimit  The most seconds a request spends indexing or searching.
      * @param  int  $maxEntryBytes  The most bytes of an entry to read. Longer entries are truncated.
+     * @param  Redactor|null  $redactor  Hides secrets in entries. Defaults to hiding the built-in secret formats.
      */
-    public function __construct(LogFileFinder $finder, string $indexDirectory, float $timeLimit = 2.0, int $maxEntryBytes = 1048576)
-    {
+    public function __construct(
+        LogFileFinder $finder,
+        string $indexDirectory,
+        float $timeLimit = 2.0,
+        int $maxEntryBytes = 1048576,
+        ?Redactor $redactor = null
+    ) {
         $this->finder = $finder;
         $this->indexDirectory = $indexDirectory;
         $this->timeLimit = $timeLimit;
         $this->maxEntryBytes = $maxEntryBytes;
+        $this->presenter = new Presenter($redactor ?? new Redactor);
     }
 
     /**
@@ -46,7 +56,7 @@ final class LogViewerApi
      */
     public function files(): ApiResponse
     {
-        return ApiResponse::ok(['data' => array_map([Presenter::class, 'file'], $this->finder->all())]);
+        return ApiResponse::ok(['data' => array_map([$this->presenter, 'file'], $this->finder->all())]);
     }
 
     /**
@@ -55,7 +65,7 @@ final class LogViewerApi
     public function file(string $id): ApiResponse
     {
         return $this->withIndex($id, function (LogFile $file, LogIndex $index, bool $complete): ApiResponse {
-            return ApiResponse::ok(['data' => array_merge(Presenter::file($file), [
+            return ApiResponse::ok(['data' => array_merge($this->presenter->file($file), [
                 'format' => $index->format(),
                 'entries' => $index->count(),
                 'levels' => (object) $index->levelCounts(),
@@ -81,7 +91,7 @@ final class LogViewerApi
             $newestFirst = $input->choice('order', ['newest', 'oldest'], 'newest') === 'newest';
 
             return ApiResponse::ok([
-                'data' => Presenter::entries($index->entries($page, $perPage, $newestFirst)),
+                'data' => $this->presenter->entries($index->entries($page, $perPage, $newestFirst)),
                 'meta' => [
                     'page' => $page,
                     'per_page' => $perPage,
@@ -123,7 +133,7 @@ final class LogViewerApi
             );
 
             return ApiResponse::ok([
-                'data' => Presenter::entries($result->entries()),
+                'data' => $this->presenter->entries($result->entries()),
                 'meta' => [
                     'next_cursor' => $result->nextCursor(),
                     'has_more' => $result->hasMore(),
@@ -158,7 +168,8 @@ final class LogViewerApi
         } catch (InvalidArgumentException $exception) {
             return ApiResponse::error(422, $exception->getMessage());
         } catch (IndexException $exception) {
-            return ApiResponse::error(500, $exception->getMessage());
+            // The exception names the folder, which isn't sent to the browser.
+            return ApiResponse::error(500, 'Vlog could not write its index. Check that the "index_path" folder in the Vlog config is writable.');
         }
     }
 }

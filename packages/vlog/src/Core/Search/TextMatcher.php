@@ -3,6 +3,7 @@
 namespace Rss\Vlog\Core\Search;
 
 use Rss\Vlog\Core\Exceptions\InvalidSearchPatternException;
+use Rss\Vlog\Core\Support\Regex;
 
 /**
  * Matches log text against a plain search term or a regular expression.
@@ -57,8 +58,8 @@ final class TextMatcher
         $matcher = new self($caseSensitive);
         $wrapped = self::DELIMITER.$pattern.self::DELIMITER.($caseSensitive ? '' : 'i');
 
-        $unicodeError = self::compileError($wrapped.'u');
-        $byteError = self::compileError($wrapped);
+        $unicodeError = Regex::compileError($wrapped.'u');
+        $byteError = Regex::compileError($wrapped);
 
         if ($unicodeError !== null && $byteError !== null) {
             throw InvalidSearchPatternException::fromCompilerError($unicodeError);
@@ -97,31 +98,5 @@ final class TextMatcher
         return $this->caseSensitive
             ? strpos($text, $this->term) !== false
             : stripos($text, $this->term) !== false;
-    }
-
-    /**
-     * Get the compiler's error for a pattern, or null when it compiles.
-     */
-    private static function compileError(string $pattern): ?string
-    {
-        $error = null;
-
-        set_error_handler(function (int $severity, string $message) use (&$error): bool {
-            $error = $message;
-
-            return true;
-        });
-
-        try {
-            $result = preg_match($pattern, '');
-        } finally {
-            restore_error_handler();
-        }
-
-        if ($result === false && $error === null) {
-            $error = 'PCRE error code '.preg_last_error();
-        }
-
-        return $error;
     }
 }

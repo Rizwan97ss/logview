@@ -60,6 +60,25 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Hiding Secrets
+    |--------------------------------------------------------------------------
+    |
+    | Before entries are shown, values under secret-looking context keys (such
+    | as "password", "token" or "api_key") and common secret formats in text
+    | (such as "password=...", bearer tokens and JWTs) are replaced with
+    | "[redacted]". Add your own context keys, and regular expressions with
+    | delimiters, to hide more. Search still matches the original text.
+    |
+    */
+
+    'redact' => [
+        'enabled' => env('VLOG_REDACT', true),
+        'keys' => [],
+        'patterns' => [],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Index Storage
     |--------------------------------------------------------------------------
     |

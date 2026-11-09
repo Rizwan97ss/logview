@@ -13,6 +13,7 @@ use Rss\Vlog\Adapters\Laravel\Http\Authorize;
 use Rss\Vlog\Adapters\Laravel\Http\UiController;
 use Rss\Vlog\Core\Files\LogFileFinder;
 use Rss\Vlog\Core\Http\LogViewerApi;
+use Rss\Vlog\Core\Security\Redactor;
 
 /**
  * Registers Vlog's configuration, access gate and routes in Laravel.
@@ -37,7 +38,12 @@ final class VlogServiceProvider extends ServiceProvider
                 ),
                 $this->string($config->get('vlog.index_path'), $app->storagePath().'/framework/vlog'),
                 (float) $this->number($config->get('vlog.time_limit'), 2.0),
-                (int) $this->number($config->get('vlog.max_entry_bytes'), 1048576)
+                (int) $this->number($config->get('vlog.max_entry_bytes'), 1048576),
+                new Redactor(
+                    $config->get('vlog.redact.enabled', true) !== false,
+                    $this->stringList($config->get('vlog.redact.keys', [])),
+                    $this->stringList($config->get('vlog.redact.patterns', []))
+                )
             );
         });
     }
@@ -80,7 +86,7 @@ final class VlogServiceProvider extends ServiceProvider
             'as' => 'vlog.',
         ], function (Router $router): void {
             $router->get('/', [UiController::class, 'show'])->name('index');
-            $router->get('api/files',[ApiController::class, 'files'])->name('api.files');
+            $router->get('api/files', [ApiController::class, 'files'])->name('api.files');
             $router->get('api/files/{file}', [ApiController::class, 'file'])->name('api.file');
             $router->get('api/files/{file}/entries', [ApiController::class, 'entries'])->name('api.entries');
             $router->get('api/files/{file}/search', [ApiController::class, 'search'])->name('api.search');

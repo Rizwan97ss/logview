@@ -6,16 +6,25 @@ use DateTimeInterface;
 use Rss\Vlog\Core\Entry\LogEntry;
 use Rss\Vlog\Core\Entry\StackFrame;
 use Rss\Vlog\Core\Files\LogFile;
+use Rss\Vlog\Core\Security\Redactor;
 
 /**
- * Converts log files and entries to the arrays the API sends as JSON.
+ * Converts log files and entries to the arrays the API sends as JSON, hiding
+ * secrets in entries on the way.
  */
 final class Presenter
 {
+    private Redactor $redactor;
+
+    public function __construct(Redactor $redactor)
+    {
+        $this->redactor = $redactor;
+    }
+
     /**
      * @return array<string, mixed>
      */
-    public static function file(LogFile $file): array
+    public function file(LogFile $file): array
     {
         return [
             'id' => $file->id(),
@@ -30,7 +39,7 @@ final class Presenter
     /**
      * @return array<string, mixed>
      */
-    public static function entry(LogEntry $entry): array
+    public function entry(LogEntry $entry): array
     {
         $time = $entry->time();
 
@@ -42,14 +51,16 @@ final class Presenter
             'raw_level' => $entry->rawLevel(),
             'time' => $time === null ? null : $time->format(DateTimeInterface::ATOM),
             'channel' => $entry->channel(),
-            'message' => $entry->message(),
-            'context' => $entry->context(),
+            'message' => $this->redactor->text($entry->message()),
+            'context' => $this->redactor->context($entry->context()),
             'stack' => array_map(function (StackFrame $frame): array {
+                $call = $frame->call();
+
                 return [
                     'index' => $frame->index(),
                     'file' => $frame->file(),
                     'line' => $frame->line(),
-                    'call' => $frame->call(),
+                    'call' => $call === null ? null : $this->redactor->text($call),
                 ];
             }, $entry->stackFrames()),
         ];
@@ -59,8 +70,8 @@ final class Presenter
      * @param  list<LogEntry>  $entries
      * @return list<array<string, mixed>>
      */
-    public static function entries(array $entries): array
+    public function entries(array $entries): array
     {
-        return array_map([self::class, 'entry'], $entries);
+        return array_map([$this, 'entry'], $entries);
     }
 }
